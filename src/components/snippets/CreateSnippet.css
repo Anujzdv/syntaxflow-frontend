@@ -1,0 +1,32 @@
+/* src/components/snippets/CreateSnippet.css */
+.snippet-form {
+  background: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  margin-bottom: 2rem;
+}
+
+.snippet-form h3 {
+  margin-top: 0;
+  text-align: center;
+}
+
+.snippet-form .form-group {
+  margin-bottom: 1rem;
+}
+
+.snippet-form input,
+.snippet-form textarea,
+.snippet-form select {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-family: inherit;
+}
+
+.snippet-form textarea {
+  resize: vertical;
+}

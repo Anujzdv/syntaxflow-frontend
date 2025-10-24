@@ -1,0 +1,148 @@
+/* src/pages/Quiz.css */
+
+.quiz-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* --- QuizSelection Page --- */
+.language-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.language-card {
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  border-bottom: 5px solid var(--lang-color, var(--primary-color));
+  transition: all 0.2s ease-in-out;
+}
+
+.language-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.language-card h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--text-color);
+}
+
+/* --- QuizPage --- */
+.quiz-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.quiz-timer {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  background: var(--card-bg);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+}
+
+.question-card {
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.question-text {
+  font-size: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.options-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.option-btn {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1rem;
+  text-align: left;
+  background: var(--bg-color);
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.option-btn:hover {
+  border-color: var(--primary-color);
+}
+
+.option-btn.selected {
+  background: #dbeafe; /* Blue 100 */
+  border-color: var(--primary-color);
+  font-weight: 600;
+}
+
+.next-btn {
+  width: 100%;
+  margin-top: 1.5rem;
+}
+
+.next-btn:disabled {
+  background-color: #9ca3af; /* Gray 400 */
+  cursor: not-allowed;
+}
+
+/* --- QuizResult Page --- */
+.result-card {
+  background: var(--card-bg);
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.result-score {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: var(--primary-color);
+  margin: 1rem 0;
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin: 2rem 0;
+}
+
+.result-item {
+  background: var(--bg-color);
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.result-item h4 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  color: #6b7280; /* Gray 500 */
+}
+
+.result-item p {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.result-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
