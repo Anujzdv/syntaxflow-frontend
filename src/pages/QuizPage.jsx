@@ -7,13 +7,13 @@ import './Quiz.css';
 const QuizPage = () => {
   const { language } = useParams();
   const navigate = useNavigate();
-  
+
   const [questions, setQuestions] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [answers, setAnswers] = useState([]); // Stores { questionId, answer }
   const [loading, setLoading] = useState(true);
-  
+
   // Timer state
   const [timeLeft, setTimeLeft] = useState(300); // 5 minutes (300 seconds)
   const timerRef = useRef(null);
@@ -99,9 +99,11 @@ const QuizPage = () => {
         answers: finalAnswers,
         timeTaken
       });
-      
-      // Navigate to results page, passing data in state
-      navigate('/quiz/result', { state: { result: res.data } });
+
+      // --- THIS LINE IS UPDATED ---
+      // Navigate to results page, passing BOTH result and questions
+      navigate('/quiz/result', { state: { result: res.data, questions: questions } });
+      // --- END OF UPDATE ---
 
     } catch (err) {
       console.error('Failed to submit quiz', err);
