@@ -222,7 +222,7 @@ const Home = () => {
       {/* 3. GAMIFIED QUIZ SECTION */}
       <section className="py-24 px-6 lg:px-12 max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-4xl lg:text-5xl font-bold mb-4">The Challenge <span className="text-cyan-400">Arena</span></h2>
+          <h2 className="text-4xl lg:text-5xl font-bold mb-4">The Challenge <span className="text-cyan-400">Quizzes</span></h2>
           <p className="text-slate-400 text-lg">Test your skills in real-time battles. Choose your difficulty.</p>
         </div>
 
@@ -315,7 +315,7 @@ const Home = () => {
           className="relative z-10 px-12 py-5 bg-slate-950 border-2 border-cyan-400 text-cyan-400 font-bold text-xl uppercase tracking-widest rounded-xl overflow-hidden group hover:text-white transition-colors duration-300"
         >
           <div className="absolute inset-0 bg-cyan-400 transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300 ease-out z-[-1]" />
-          Enter The Arena
+          Enter The Quizzes
         </motion.button>
       </section>
 

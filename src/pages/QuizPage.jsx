@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import './Quiz.css';
 
 const QuizPage = () => {
   const { language } = useParams();

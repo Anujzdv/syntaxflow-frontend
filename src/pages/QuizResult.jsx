@@ -1,7 +1,6 @@
 // src/pages/QuizResult.jsx
 import React from 'react';
 import { useLocation, Link, Navigate } from 'react-router-dom';
-import './Quiz.css'; // We will add new styles to this
 
 const QuizResult = () => {
   const location = useLocation();

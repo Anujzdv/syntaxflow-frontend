@@ -1,83 +1,65 @@
-// src/components/snippets/SnippetItem.jsx
-import React, { useContext, useState } from 'react';
-import AuthContext from '../../context/AuthContext';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Heart, Share2, Code2 } from 'lucide-react';
 import api from '../../services/api';
-import './SnippetItem.css';
 
-const SnippetItem = ({ snippet }) => {
-  const { user } = useContext(AuthContext);
-  const [likes, setLikes] = useState(snippet.likes || []);
-  const [comments, setComments] = useState(snippet.comments || []);
-  const [commentText, setCommentText] = useState('');
-
-  // Check if the current user has liked this post
-  const hasLiked = likes.some((like) => like.user === user._id);
+const SnippetItem = ({ snippet, onLike }) => {
+  const [liked, setLiked] = useState(false);
+  const [likes, setLikes] = useState(snippet.likes?.length || 0);
 
   const handleLike = async () => {
     try {
-      const res = await api.put(`/api/snippets/like/${snippet._id}`);
-      setLikes(res.data); // Update likes from server response
+      await api.post(`/snippets/${snippet._id}/like`);
+      setLiked(!liked);
+      setLikes(liked ? likes - 1 : likes + 1);
+      if (onLike) onLike();
     } catch (err) {
       console.error('Like failed', err);
     }
   };
 
-  const handleComment = async (e) => {
-    e.preventDefault();
-    if (!commentText) return;
-    try {
-      const res = await api.post(`/api/snippets/comment/${snippet._id}`, { text: commentText });
-      setComments(res.data); // Update comments from server
-      setCommentText('');
-    } catch (err) {
-      console.error('Comment failed', err);
-    }
-  };
-  
-  // Helper to format the code block
-  const formattedCode = "```" + snippet.language.toLowerCase() + "\n" + snippet.code + "\n```";
-
   return (
-    <div className="snippet-card">
-      <div className="snippet-header">
-        <span className="snippet-author">{snippet.user.name || 'User'}</span>
-        <span className="snippet-language">{snippet.language}</span>
+    <motion.div 
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-[#0f172a] rounded-2xl border border-slate-800 p-6 shadow-lg mb-6 group hover:border-slate-700 transition-colors"
+    >
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center font-bold text-white shadow-inner">
+            {snippet.user?.username?.charAt(0).toUpperCase() || '?'}
+          </div>
+          <div>
+            <h4 className="font-bold text-slate-200">@{snippet.user?.username || 'anonymous'}</h4>
+            <span className="text-xs text-slate-500 font-mono flex items-center gap-1">
+              <Code2 className="w-3 h-3" /> {snippet.language || 'javascript'}
+            </span>
+          </div>
+        </div>
       </div>
-      <div className="snippet-body">
-        <h4>{snippet.title}</h4>
-        <p>{snippet.description}</p>
-        <pre className="code-block">
+      
+      <div className="bg-slate-900 rounded-xl p-4 mb-4 overflow-x-auto border border-slate-800/50">
+        <pre className="font-mono text-sm text-slate-300">
           <code>{snippet.code}</code>
         </pre>
       </div>
-      <div className="snippet-actions">
-        <button onClick={handleLike} className={`btn-like ${hasLiked ? 'liked' : ''}`}>
-          ❤️ {likes.length} Like{likes.length !== 1 ? 's' : ''}
-        </button>
-        <span className="comment-count">
-          💬 {comments.length} Comment{comments.length !== 1 ? 's' : ''}
-        </span>
-      </div>
-      <div className="snippet-comments">
-        <form onSubmit={handleComment} className="comment-form">
-          <input
-            type="text"
-            placeholder="Add a comment..."
-            value={commentText}
-            onChange={(e) => setCommentText(e.target.value)}
-          />
-          <button type="submit">Post</button>
-        </form>
-        <div className="comment-list">
-          {comments.slice(0, 3).map((comment) => ( // Show 3 recent comments
-            <div key={comment._id} className="comment">
-              <strong>{comment.name}:</strong> {comment.text}
-            </div>
-          ))}
+
+      <div className="flex items-center justify-between border-t border-slate-800/60 pt-4 mt-2">
+        <div className="flex gap-4">
+          <motion.button 
+            whileTap={{ scale: 0.9 }}
+            onClick={handleLike}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors ${liked ? 'bg-pink-500/10 text-pink-500 border border-pink-500/20' : 'text-slate-400 hover:bg-slate-800 border border-transparent'}`}
+          >
+            <Heart className={`w-4 h-4 ${liked ? 'fill-pink-500' : ''}`} />
+            <span className="text-sm font-medium font-mono">{likes}</span>
+          </motion.button>
         </div>
+        <button className="text-slate-500 hover:text-slate-300 transition-colors p-2">
+          <Share2 className="w-4 h-4" />
+        </button>
       </div>
-    </div>
+    </motion.div>
   );
 };
-
 export default SnippetItem;

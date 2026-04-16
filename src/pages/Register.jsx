@@ -1,85 +1,79 @@
-// src/pages/Register.jsx
 import React, { useState, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Terminal, Lock, Mail, User, ChevronRight } from 'lucide-react';
 import AuthContext from '../context/AuthContext';
-import './Auth.css'; // We'll create this file next
 
 const Register = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    password2: '', // For confirmation
-  });
-  const { register } = useContext(AuthContext);
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const { register } = useContext(AuthContext) || {};
   const navigate = useNavigate();
 
-  const { name, email, password, password2 } = formData;
-
-  const onChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-
-  const onSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (password !== password2) {
-      alert('Passwords do not match');
-    } else {
-      register({ name, email, password });
-    }
+    if (register) await register(username, email, password);
+    navigate('/feed');
   };
 
   return (
-    <div className="auth-container">
-      <form className="auth-form" onSubmit={onSubmit}>
-        <h2>Register for Syntax|Flow</h2>
-        <div className="form-group">
-          <label>Name</label>
-          <input
-            type="text"
-            name="name"
-            value={name}
-            onChange={onChange}
-            required
-          />
+    <div className="min-h-[85vh] flex items-center justify-center px-4 relative">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500/10 blur-[100px] rounded-full pointer-events-none" />
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-md bg-[#0f172a] rounded-2xl border border-slate-800 p-8 shadow-2xl relative z-10"
+      >
+        <div className="flex justify-center mb-6">
+          <div className="p-4 bg-slate-900 rounded-full border border-slate-800 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+            <Terminal className="w-8 h-8 text-purple-400" />
+          </div>
         </div>
-        <div className="form-group">
-          <label>Email</label>
-          <input
-            type="email"
-            name="email"
-            value={email}
-            onChange={onChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>Password</label>
-          <input
-            type="password"
-            name="password"
-            value={password}
-            onChange={onChange}
-            minLength="6"
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label>Confirm Password</label>
-          <input
-            type="password"
-            name="password2"
-            value={password2}
-            onChange={onChange}
-            minLength="6"
-            required
-          />
-        </div>
-        <button type="submit" className="btn btn-primary btn-block">
-          Register
-        </button>
-      </form>
+        <h2 className="text-3xl font-bold text-center text-white mb-2">Create Account</h2>
+        <p className="text-center text-slate-400 mb-8 font-mono text-sm">Sign up to get started.</p>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-mono text-slate-400 mb-2">Username</label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+              <input type="text" required value={username} onChange={(e) => setUsername(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                placeholder="cyber_ninja"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-mono text-slate-400 mb-2">Email</label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                placeholder="name@example.com"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-mono text-slate-400 mb-2">Password</label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+              <input type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                placeholder="••••••••"
+              />
+            </div>
+          </div>
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit"
+            className="w-full py-3 bg-purple-500 hover:bg-purple-400 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(168,85,247,0.4)] mt-6"
+          >
+            Sign Up <ChevronRight className="w-4 h-4 border-2 border-white rounded-full p-[1px]" />
+          </motion.button>
+        </form>
+        <p className="text-center text-slate-400 mt-6 text-sm">
+          Already have an account? <Link to="/login" className="text-purple-400 hover:text-purple-300 font-medium">Login</Link>
+        </p>
+      </motion.div>
     </div>
   );
 };
-
 export default Register;
