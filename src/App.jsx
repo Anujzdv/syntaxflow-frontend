@@ -17,7 +17,7 @@ function App() {
   return (
     <>
       <Navbar />
-      <div className="container">
+      <main>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
@@ -38,7 +38,7 @@ function App() {
             <Route path="/leaderboard" element={<Leaderboard />} /> {/* <-- Add Route */}
           </Route>
         </Routes>
-      </div>
+      </main>
     </>
   );
 }
