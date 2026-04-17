@@ -5,7 +5,7 @@ import { Terminal, Lock, Mail, User, ChevronRight } from 'lucide-react';
 import AuthContext from '../context/AuthContext';
 
 const Register = () => {
-  const [username, setUsername] = useState('');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
@@ -18,7 +18,7 @@ const Register = () => {
     setError(null);
     setLoading(true);
     try {
-      if (register) await register(username, email, password);
+      if (register) await register(name, email, password);
       navigate('/feed');
     } catch (err) {
       console.error(err);
@@ -47,12 +47,12 @@ const Register = () => {
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-mono text-slate-400 mb-2">Username</label>
+            <label className="block text-sm font-mono text-slate-400 mb-2">Name</label>
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-              <input type="text" required value={username} onChange={(e) => setUsername(e.target.value)}
+              <input type="text" required value={name} onChange={(e) => setName(e.target.value)}
                 className="w-full bg-slate-900 border border-slate-700 text-slate-200 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
-                placeholder="cyber_ninja"
+                placeholder="John Doe"
               />
             </div>
           </div>
