@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Heart, Share2, Code2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Heart, Share2, Code2, MessageSquare, Send } from 'lucide-react';
 import api from '../../services/api';
 
 const SnippetItem = ({ snippet, onLike }) => {
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(snippet.likes?.length || 0);
+  const [comments, setComments] = useState(snippet.comments || []);
+  const [showComments, setShowComments] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleLike = async () => {
     try {
@@ -19,11 +23,30 @@ const SnippetItem = ({ snippet, onLike }) => {
     }
   };
 
+  const handleCommentSubmit = async (e) => {
+    e.preventDefault();
+    if (!newComment.trim()) return;
+    
+    setIsSubmitting(true);
+    try {
+      const res = await api.post(`/api/snippets/${snippet._id}/comment`, { text: newComment });
+      if (res.data && res.data.comments) {
+        setComments(res.data.comments);
+      }
+      setNewComment('');
+      if (onLike) onLike(); // Optionally refetch feed generally
+    } catch (err) {
+      console.error('Comment failed', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-[#0f172a] rounded-2xl border border-slate-800 p-6 shadow-lg mb-6 group hover:border-slate-700 transition-colors"
+      className="bg-[#0f172a] rounded-2xl border border-slate-800 p-6 shadow-lg mb-6 hover:border-slate-700 transition-colors"
     >
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
@@ -40,10 +63,14 @@ const SnippetItem = ({ snippet, onLike }) => {
       </div>
       
       {snippet.title && (
-        <h3 className="text-xl font-bold text-slate-200 mb-2 truncate">{snippet.title}</h3>
+        <h3 className="text-xl font-bold text-slate-200 mb-2">{snippet.title}</h3>
       )}
       
-      <div className="bg-slate-900 rounded-xl p-4 mb-4 overflow-x-auto border border-slate-800/50">
+      {snippet.description && (
+        <p className="text-sm text-slate-400 mb-3">{snippet.description}</p>
+      )}
+      
+      <div className="bg-slate-950 rounded-xl p-4 mb-4 overflow-x-auto border border-slate-800/50 shadow-inner">
         <pre className="font-mono text-sm text-slate-300">
           <code>{snippet.code}</code>
         </pre>
@@ -59,11 +86,76 @@ const SnippetItem = ({ snippet, onLike }) => {
             <Heart className={`w-4 h-4 ${liked ? 'fill-pink-500' : ''}`} />
             <span className="text-sm font-medium font-mono">{likes}</span>
           </motion.button>
+
+          <motion.button 
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setShowComments(!showComments)}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors ${showComments ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'text-slate-400 hover:bg-slate-800 border border-transparent'}`}
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span className="text-sm font-medium font-mono">{comments.length}</span>
+          </motion.button>
         </div>
         <button className="text-slate-500 hover:text-slate-300 transition-colors p-2">
           <Share2 className="w-4 h-4" />
         </button>
       </div>
+
+      {/* Expandable Comments Section */}
+      <AnimatePresence>
+        {showComments && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="mt-4 pt-4 border-t border-slate-800/60">
+              {/* Existing Comments */}
+              <div className="space-y-3 mb-4 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                {comments.length === 0 ? (
+                  <p className="text-sm text-slate-500 font-mono text-center py-4 bg-slate-900/30 rounded-xl border border-dashed border-slate-800">
+                    No comments yet. Start the conversation!
+                  </p>
+                ) : (
+                  comments.map((comment, index) => (
+                    <div key={index} className="bg-slate-900/50 rounded-xl p-3 border border-slate-800/50">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center font-bold text-slate-400 text-xs">
+                          {(comment.name || comment.user?.name || '?').charAt(0).toUpperCase()}
+                        </div>
+                        <span className="font-bold text-slate-300 text-sm">@{comment.name || comment.user?.name || 'user'}</span>
+                        <span className="text-xs text-slate-500">• {new Date(comment.date).toLocaleDateString()}</span>
+                      </div>
+                      <p className="text-sm text-slate-400 pl-7">{comment.text}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Add Comment Form */}
+              <form onSubmit={handleCommentSubmit} className="flex gap-2">
+                <input
+                  type="text"
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Write a comment..."
+                  disabled={isSubmitting}
+                  className="flex-1 bg-slate-900 border border-slate-700 text-slate-300 text-sm rounded-xl px-4 py-2.5 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all disabled:opacity-50"
+                />
+                <button 
+                  type="submit" 
+                  disabled={!newComment.trim() || isSubmitting}
+                  className="px-4 py-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 rounded-xl text-sm font-bold shadow-[0_0_15px_rgba(6,182,212,0.2)] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+                >
+                  <Send className="w-4 h-4" />
+                  <span className="hidden sm:inline">Post</span>
+                </button>
+              </form>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
