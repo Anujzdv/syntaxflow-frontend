@@ -9,9 +9,10 @@ const SnippetItem = ({ snippet, onLike }) => {
 
   const handleLike = async () => {
     try {
-      await api.post(`/snippets/${snippet._id}/like`);
+      const res = await api.post(`/api/snippets/${snippet._id}/like`);
       setLiked(!liked);
-      setLikes(liked ? likes - 1 : likes + 1);
+      // Use likesCount from the backend response if available, or fallback
+      setLikes(res.data?.likesCount !== undefined ? res.data.likesCount : (liked ? likes - 1 : likes + 1));
       if (onLike) onLike();
     } catch (err) {
       console.error('Like failed', err);
@@ -27,16 +28,20 @@ const SnippetItem = ({ snippet, onLike }) => {
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center font-bold text-white shadow-inner">
-            {snippet.user?.username?.charAt(0).toUpperCase() || '?'}
+            {snippet.user?.username?.charAt(0).toUpperCase() || snippet.user?.name?.charAt(0).toUpperCase() || '?'}
           </div>
           <div>
-            <h4 className="font-bold text-slate-200">@{snippet.user?.username || 'anonymous'}</h4>
+            <h4 className="font-bold text-slate-200">@{snippet.user?.username || snippet.user?.name || 'anonymous'}</h4>
             <span className="text-xs text-slate-500 font-mono flex items-center gap-1">
               <Code2 className="w-3 h-3" /> {snippet.language || 'javascript'}
             </span>
           </div>
         </div>
       </div>
+      
+      {snippet.title && (
+        <h3 className="text-xl font-bold text-slate-200 mb-2 truncate">{snippet.title}</h3>
+      )}
       
       <div className="bg-slate-900 rounded-xl p-4 mb-4 overflow-x-auto border border-slate-800/50">
         <pre className="font-mono text-sm text-slate-300">
