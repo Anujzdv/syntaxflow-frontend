@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
 import CreateSnippet from '../components/snippets/CreateSnippet';
 import SnippetItem from '../components/snippets/SnippetItem';
@@ -8,20 +8,65 @@ import { LayoutDashboard, Plus, Code2 } from 'lucide-react';
 const Feed = () => {
   const [snippets, setSnippets] = useState([]);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const observerTarget = useRef(null);
 
-  useEffect(() => {
-    fetchSnippets();
-  }, []);
+  const fetchSnippets = async (pageNum) => {
+    if (loading || (!hasMore && pageNum > 1)) return;
 
-  const fetchSnippets = async () => {
+    setLoading(true);
+    setError(null);
+
     try {
-      const res = await api.get('/api/snippets');
-      // Support both { data: [...] } from axios directly, or res.data.data from new backend wrapper
-      setSnippets(res.data.data || res.data || []);
+      const res = await api.get(`/api/snippets?page=${pageNum}&limit=10`);
+      const fetchedData = res.data.data || [];
+      
+      if (pageNum === 1) {
+        setSnippets(fetchedData);
+      } else {
+        setSnippets((prev) => {
+          // ensure no duplicates
+          const currentIds = new Set(prev.map(s => s._id));
+          const additions = fetchedData.filter(s => !currentIds.has(s._id));
+          return [...prev, ...additions];
+        });
+      }
+      
+      setHasMore(res.data.hasMore !== undefined ? res.data.hasMore : false);
+      setPage(pageNum + 1);
     } catch (err) {
       console.error('Error fetching snippets', err);
+      setError(err.response?.data?.msg || 'Failed to load feed');
+    } finally {
+      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    fetchSnippets(1);
+  }, []);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting && hasMore && !loading) {
+          // eslint-disable-next-line react-hooks/exhaustive-deps
+          fetchSnippets(page);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (observerTarget.current) {
+      observer.observe(observerTarget.current);
+    }
+
+    return () => observer.disconnect();
+  }, [page, hasMore, loading]);
 
   const handleSnippetCreated = (newSnippet) => {
     setSnippets([newSnippet, ...snippets]);
@@ -43,7 +88,9 @@ const Feed = () => {
         </motion.div>
 
         <div className="flex flex-col w-full pb-24">
-          {snippets.length === 0 ? (
+          {error && <div className="p-4 m-6 border border-red-500/50 bg-red-500/10 text-red-200 rounded-xl text-center text-sm">{error}</div>}
+          
+          {snippets.length === 0 && !loading && !error ? (
             <div className="h-[calc(100vh-160px)] snap-start flex flex-col items-center justify-center p-6">
               <div className="text-center py-16 border-2 border-dashed border-slate-800 rounded-2xl flex flex-col items-center justify-center gap-4 w-full">
                 <Code2 className="w-12 h-12 text-slate-700" />
@@ -53,14 +100,28 @@ const Feed = () => {
           ) : (
             snippets.map((snippet) => (
               <div key={snippet._id} className="snap-start min-h-[calc(100vh-64px)] flex flex-col justify-center items-center py-8 px-4 w-full">
-                <SnippetItem snippet={snippet} onLike={fetchSnippets} />
+                <SnippetItem snippet={snippet} onLike={() => {}} />
               </div>
             ))
+          )}
+
+          {/* Infinite Scroll Sentinel */}
+          {loading && (
+            <div className="py-12 flex justify-center items-center snap-start w-full">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
+            </div>
+          )}
+          <div ref={observerTarget} className="h-10 w-full snap-start" />
+          
+          {!hasMore && snippets.length > 0 && (
+            <div className="text-center py-12 text-slate-500 font-mono snap-start w-full">
+              You've reached the end of the feed!
+            </div>
           )}
         </div>
       </div>
 
-      {/* Floating Action Button (FAB) for Instagram-like UX */}
+      {/* Floating Action Button (FAB) */}
       <motion.button
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
