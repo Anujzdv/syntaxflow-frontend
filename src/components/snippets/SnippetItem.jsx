@@ -46,7 +46,7 @@ const SnippetItem = ({ snippet, onLike }) => {
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-[#0f172a] rounded-2xl border border-slate-800 p-6 shadow-lg mb-6 hover:border-slate-700 transition-colors"
+      className="bg-[#0f172a] rounded-2xl border border-slate-800 p-6 shadow-lg group hover:border-slate-700 transition-colors w-full max-w-2xl"
     >
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
