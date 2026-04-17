@@ -7,13 +7,24 @@ import AuthContext from '../context/AuthContext';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const { login } = useContext(AuthContext) || {};
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (login) await login(email, password);
-    navigate('/feed');
+    setError(null);
+    setLoading(true);
+    try {
+      if (login) await login(email, password);
+      navigate('/feed');
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -30,6 +41,8 @@ const Login = () => {
         </div>
         <h2 className="text-3xl font-bold text-center text-white mb-2">Welcome Back</h2>
         <p className="text-center text-slate-400 mb-8 font-mono text-sm">Enter your details to sign in.</p>
+        
+        {error && <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200 text-sm text-center">{error}</div>}
         
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
@@ -52,10 +65,10 @@ const Login = () => {
               />
             </div>
           </div>
-          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit"
-            className="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)] mt-6"
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} type="submit" disabled={loading}
+            className={`w-full py-3 ${loading ? 'bg-slate-700 cursor-not-allowed' : 'bg-cyan-500 hover:bg-cyan-400'} text-slate-950 font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)] mt-6`}
           >
-            Sign In <ChevronRight className="w-4 h-4 border-2 border-slate-950 rounded-full p-[1px]" />
+            {loading ? 'Signing In...' : <>Sign In <ChevronRight className="w-4 h-4 border-2 border-slate-950 rounded-full p-[1px]" /></>}
           </motion.button>
         </form>
         <p className="text-center text-slate-400 mt-6 text-sm">
