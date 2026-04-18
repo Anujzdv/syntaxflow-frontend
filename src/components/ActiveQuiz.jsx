@@ -22,8 +22,13 @@ const ActiveQuiz = () => {
     const fetchQuiz = async () => {
       try {
         setLoading(true);
+        
+        // 🚨 FIX: Determine if `quizId` is a real MongoDB ID or just a legacy name (like 'python')
+        const isMongoDbId = /^[0-9a-fA-F]{24}$/.test(quizId);
+        const fetchUrl = isMongoDbId ? `/api/quizzes/${quizId}` : `/api/quiz/${quizId}`;
+
         // Fetch specific endpoint
-        const response = await api.get(`/api/quizzes/${quizId}`);
+        const response = await api.get(fetchUrl);
         const data = response.data;
         
         // Ensure data exists and is in correct format.
@@ -71,8 +76,12 @@ const ActiveQuiz = () => {
 
     try {
       const timeTaken = quizData && quizData.timeLimit ? quizData.timeLimit - timeLeft : 0;
-      // Use proper specific endpoint
-      const response = await api.post(`/api/quizzes/${quizId}/submit`, {
+      
+      const isMongoDbId = /^[0-9a-fA-F]{24}$/.test(quizId);
+      const submitUrl = isMongoDbId ? `/api/quizzes/${quizId}/submit` : `/api/quiz/submit`;
+      
+      const response = await api.post(submitUrl, {
+        quizId: !isMongoDbId ? quizId : undefined, // Legacy expects quizId in body
         answers: formattedAnswers,
         tabSwitchCount: tabSwitchCount,
         timeTaken: timeTaken
