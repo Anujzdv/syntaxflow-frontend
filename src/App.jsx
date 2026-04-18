@@ -10,6 +10,7 @@ import Feed from './pages/Feed';
 import Profile from './pages/Profile';
 import QuizSelection from './pages/QuizSelection';
 import QuizPage from './pages/QuizPage';
+import ActiveQuiz from './components/ActiveQuiz';
 import QuizResult from './pages/QuizResult';
 import Leaderboard from './pages/Leaderboard'; // <-- Import
 
@@ -32,6 +33,7 @@ function App() {
             {/* Quiz Routes */}
             <Route path="/quiz" element={<QuizSelection />} />
             <Route path="/quiz/:language" element={<QuizPage />} />
+            <Route path="/active-quiz/:quizId" element={<ActiveQuiz />} />
             <Route path="/quiz/result" element={<QuizResult />} />
             
             {/* Leaderboard Route */}
