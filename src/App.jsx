@@ -11,7 +11,8 @@ import Profile from './pages/Profile';
 import QuizSelection from './pages/QuizSelection';
 import ActiveQuiz from './components/ActiveQuiz';
 import QuizResult from './pages/QuizResult';
-import Leaderboard from './pages/Leaderboard'; // <-- Import
+import Leaderboard from './pages/Leaderboard';
+import Challenges from './pages/Challenges';
 
 function App() {
   return (
@@ -36,7 +37,10 @@ function App() {
             <Route path="/quiz/result" element={<QuizResult />} />
             
             {/* Leaderboard Route */}
-            <Route path="/leaderboard" element={<Leaderboard />} /> {/* <-- Add Route */}
+            <Route path="/leaderboard" element={<Leaderboard />} />
+
+            {/* Challenges Route */}
+            <Route path="/challenges" element={<Challenges />} />
           </Route>
         </Routes>
       </main>
