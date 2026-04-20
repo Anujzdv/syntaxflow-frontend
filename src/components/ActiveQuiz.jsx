@@ -23,7 +23,7 @@ const ActiveQuiz = () => {
       try {
         setLoading(true);
         
-        // 🚨 FIX: Determine if `quizId` is a real MongoDB ID or just a legacy name (like 'python')
+        // 🚨 FALLBACK FIX: Check if quizId is a real MongoDB ID or a legacy name (like 'javascript')
         const isMongoDbId = /^[0-9a-fA-F]{24}$/.test(quizId);
         const fetchUrl = isMongoDbId ? `/api/quizzes/${quizId}` : `/api/quiz/${quizId}`;
 
@@ -81,7 +81,7 @@ const ActiveQuiz = () => {
       const submitUrl = isMongoDbId ? `/api/quizzes/${quizId}/submit` : `/api/quiz/submit`;
       
       const response = await api.post(submitUrl, {
-        quizId: !isMongoDbId ? quizId : undefined, // Legacy expects quizId in body
+        quizId: !isMongoDbId ? quizId : undefined, // Legacy endpoint expects this
         answers: formattedAnswers,
         tabSwitchCount: tabSwitchCount,
         timeTaken: timeTaken
