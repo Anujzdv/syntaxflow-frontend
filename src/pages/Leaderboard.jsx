@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Medal, Crown, Star, Flame, ChevronRight, Loader2, AlertCircle, TrendingUp } from 'lucide-react';
+
 import AuthContext from '../context/AuthContext';
 
 const Leaderboard = () => {
   const { user } = useContext(AuthContext) || {};
+  const navigate = useNavigate();
   
   const [topUsers, setTopUsers] = useState([]);
   const [currentUserData, setCurrentUserData] = useState(null);
@@ -237,7 +239,8 @@ const Leaderboard = () => {
                             <Star className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-400" />
                             <span className="font-mono text-emerald-400 font-bold text-xs sm:text-sm">{u.xp || 0} XP</span>
                           </div>
-                          <button onClick={() => {/* Navigate to profile in future phase */}} className="hidden md:flex items-center text-slate-500 hover:text-cyan-400 transition-colors p-2 rounded-lg hover:bg-cyan-500/10">
+                          {/* Link to view user's profile dashboard */}
+                          <button onClick={() => navigate(`/profile/${u._id}`)} className="hidden md:flex items-center text-slate-500 hover:text-cyan-400 transition-colors p-2 rounded-lg hover:bg-cyan-500/10">
                             <ChevronRight className="w-5 h-5" />
                           </button>
                         </div>

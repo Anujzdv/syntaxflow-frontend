@@ -1,66 +1,336 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { Mail, Medal, Star, Cpu, Terminal, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect, useContext } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { } from 'framer-motion';
+import { 
+  ArrowLeft, Terminal, Trophy, Star, Target, Zap, 
+  Flame, Award, Code2, Database, Layout, Server, 
+  Activity, Calendar, Loader2
+} from 'lucide-react';
+import { 
+  Radar, RadarChart, PolarGrid, PolarAngleAxis, 
+  PolarRadiusAxis, ResponsiveContainer 
+} from 'recharts';
 import AuthContext from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
 const Profile = () => {
-  const { user } = useContext(AuthContext) || {};
+  const { id } = useParams();
+  const { user: authUser } = useContext(AuthContext) || {};
   const navigate = useNavigate();
-  const [stats, setStats] = useState({ totalSnippets: 0, totalLikes: 0 });
+
+  const [profileUser, setProfileUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const isOwnProfile = !id || (authUser && id === authUser._id);
+
+  // Mock data for the Skill Graph and History until Backend is updated
+  const skillData = [
+    { subject: 'JavaScript', A: 90, fullMark: 100 },
+    { subject: 'React', A: 75, fullMark: 100 },
+    { subject: 'Node.js', A: 85, fullMark: 100 },
+    { subject: 'Python', A: 60, fullMark: 100 },
+    { subject: 'MongoDB', A: 70, fullMark: 100 },
+    { subject: 'CSS/UI', A: 80, fullMark: 100 },
+  ];
+
+  const recentActivity = [
+    { id: 1, type: 'quiz', title: 'Advanced React Hooks', result: 'Passed', xp: '+100', date: '2 hours ago', accuracy: '95%' },
+    { id: 2, type: 'quiz', title: 'JavaScript Mastery', result: 'Passed', xp: '+150', date: '1 day ago', accuracy: '100%' },
+    { id: 3, type: 'quiz', title: 'MongoDB Aggregations', result: 'Failed', xp: '+10', date: '3 days ago', accuracy: '45%' },
+  ];
+
+  const badges = [
+    { id: 1, icon: Flame, color: 'text-orange-500', bg: 'bg-orange-500/10', title: '7-Day Streak', desc: 'Played 7 days in a row' },
+    { id: 2, icon: Target, color: 'text-emerald-500', bg: 'bg-emerald-500/10', title: 'Sharpshooter', desc: '90%+ Avg Accuracy' },
+    { id: 3, icon: Trophy, color: 'text-yellow-500', bg: 'bg-yellow-500/10', title: 'Top 10 Weekly', desc: 'Ranked in top 10' },
+  ];
 
   useEffect(() => {
-    // Optionally fetch more detailed user stats here if the API provides it
-  }, [user]);
+    const fetchProfile = async () => {
+      setLoading(true);
+      try {
+        if (isOwnProfile && authUser) {
+          // If viewing own profile, we might fetch /api/users/me for deep stats 
+          // or just use the authUser object for now
+          try {
+            const res = await api.get('/api/auth/me'); // Assuming an endpoint exists or just map authUser
+            setProfileUser(res.data?.user || authUser);
+          } catch(_e) {
+             setProfileUser(authUser);
+          }
+        } else if (id) {
+          // Fetch specific user profile
+          const res = await api.get(`/api/users/${id}`);
+          setProfileUser(res.data);
+        }
+      } catch (err) {
+        console.error('Failed to load profile', err);
+        setError('Could not load profile data.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  if (!user) return <div className="text-center mt-20 font-mono text-cyan-400">Loading Profile Data...</div>;
+    fetchProfile();
+  }, [id, authUser, isOwnProfile]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center">
+        <Loader2 className="w-10 h-10 text-indigo-500 animate-spin mb-4" />
+        <p className="text-slate-400 font-mono animate-pulse">Loading Profile...</p>
+      </div>
+    );
+  }
+
+  if (error || !profileUser) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
+        <div className="bg-red-500/10 border border-red-500/20 p-6 rounded-2xl text-center">
+          <p className="text-red-400 mb-4">{error || 'User not found'}</p>
+          <button onClick={() => navigate('/leaderboard')} className="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition">
+            Return to Leaderboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Derived stats
+  const level = Math.floor((profileUser.xp || 0) / 100) + 1;
+  const isTopRanked = profileUser.rank && profileUser.rank <= 10;
 
   return (
-    <div className="min-h-[85vh] bg-slate-950 py-12 px-4 flex flex-col items-center relative">
-      <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none" />
+    <div className="min-h-screen bg-slate-950 pt-20 pb-12 px-4 relative overflow-hidden">
+      {/* Background Aesthetics */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[150px] pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-cyan-500/10 rounded-full blur-[150px] pointer-events-none" />
 
-      <div className="w-full max-w-3xl z-10">
-        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-slate-400 hover:text-cyan-400 transition-colors mb-8 font-mono text-sm group">
-          <ArrowLeft className="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" />
-          Back
+      <div className="max-w-6xl mx-auto relative z-10 space-y-8">
+        
+        {/* Nav Header */}
+        <button 
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5" /> Back
         </button>
 
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-[#0f172a] rounded-3xl border border-slate-800 p-8 md:p-12 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-full h-2 bg-gradient-to-r from-purple-500 to-cyan-500" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
-          <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
-            <div className="w-32 h-32 rounded-full bg-slate-900 border-4 border-slate-800 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.2)]">
-              <Terminal className="w-16 h-16 text-cyan-500" />
-            </div>
+          {/* Left Column: Identity & Core Stats */}
+          <div className="lg:col-span-1 space-y-8">
             
-            <div className="flex-1 text-center md:text-left">
-              <div className="inline-flex items-center gap-2 bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20 mb-4">
-                <span className="w-2 h-2 rounded-full bg-purple-400 animate-pulse" />
-                <span className="text-xs font-bold text-purple-400 font-mono uppercase tracking-widest">Active User</span>
-              </div>
-              <h1 className="text-4xl font-bold text-white mb-2">@{user.username}</h1>
-              <div className="flex items-center justify-center md:justify-start gap-2 text-slate-400 font-mono text-sm mb-8">
-                <Mail className="w-4 h-4" /> {user.email}
+            {/* Identity Card */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-slate-900 border border-slate-800 rounded-3xl p-8 relative overflow-hidden text-center shadow-xl"
+            >
+              {isTopRanked && (
+                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-600" />
+              )}
+              
+              <div className="relative inline-block mb-6">
+                <div className={`w-28 h-28 rounded-2xl flex items-center justify-center text-4xl font-bold border-4 mx-auto shadow-2xl z-10 relative bg-slate-800 ${isTopRanked ? 'border-yellow-500 text-yellow-400' : 'border-indigo-500 text-indigo-400'}`}>
+                  {profileUser.name?.charAt(0).toUpperCase() || profileUser.username?.charAt(0).toUpperCase() || '?'}
+                </div>
+                {isTopRanked && (
+                  <div className="absolute -top-4 -right-4 bg-yellow-500/20 p-2 rounded-full border border-yellow-500/50 backdrop-blur-sm z-20">
+                    <Trophy className="w-6 h-6 text-yellow-400 drop-shadow-md" />
+                  </div>
+                )}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-800/50 flex flex-col items-center justify-center">
-                  <Star className="w-6 h-6 text-emerald-400 mb-2" />
-                  <span className="text-2xl font-bold text-white">{user.xp || 0}</span>
-                  <span className="text-xs text-slate-500 font-mono uppercase mt-1">Total XP</span>
+              <h1 className="text-3xl font-black text-white mb-1">
+                {profileUser.name || profileUser.username}
+              </h1>
+              <p className="text-indigo-400 font-mono mb-4">@{profileUser.username}</p>
+              <p className="text-slate-400 text-sm mb-6 leading-relaxed">
+                {profileUser.bio || "SyntaxFlow challenger carving their path to the top of the leaderboard."}
+              </p>
+
+              <div className="flex justify-center gap-3">
+                {isOwnProfile ? (
+                  <button className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-medium transition-colors border border-slate-700 flex-1">
+                    Edit Profile
+                  </button>
+                ) : (
+                  <button className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(99,102,241,0.3)] flex-1 flex items-center justify-center gap-2">
+                    <Target className="w-4 h-4" /> Challenge
+                  </button>
+                )}
+              </div>
+            </motion.div>
+
+            {/* Core Metrics Grid */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="grid grid-cols-2 gap-4"
+            >
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
+                <div className="flex items-center gap-2 mb-2 text-slate-400">
+                  <Star className="w-4 h-4 text-emerald-400" />
+                  <span className="text-xs uppercase tracking-wider font-bold">Total XP</span>
                 </div>
-                <div className="bg-slate-900/50 rounded-xl p-4 border border-slate-800/50 flex flex-col items-center justify-center">
-                  <Medal className="w-6 h-6 text-yellow-400 mb-2" />
-                  <span className="text-2xl font-bold text-white">Lvl {Math.floor((user.xp || 0) / 100) + 1}</span>
-                  <span className="text-xs text-slate-500 font-mono uppercase mt-1">Rank</span>
+                <div className="text-3xl font-black text-white">{profileUser.xp || 0}</div>
+                <div className="text-xs text-emerald-400 font-mono mt-1 w-full bg-slate-800 rounded-full overflow-hidden h-1.5 flex">
+                  <div className="bg-emerald-400 h-full" style={{ width: `${((profileUser.xp || 0) % 100)}%` }} />
                 </div>
               </div>
-            </div>
+
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
+                <div className="flex items-center gap-2 mb-2 text-slate-400">
+                  <Zap className="w-4 h-4 text-cyan-400" />
+                  <span className="text-xs uppercase tracking-wider font-bold">Level</span>
+                </div>
+                <div className="text-3xl font-black text-white">{level}</div>
+                <div className="text-xs text-cyan-400 font-mono mt-1">Mastery Rank</div>
+              </div>
+
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
+                <div className="flex items-center gap-2 mb-2 text-slate-400">
+                  <Activity className="w-4 h-4 text-purple-400" />
+                  <span className="text-xs uppercase tracking-wider font-bold">Accuracy</span>
+                </div>
+                <div className="text-3xl font-black text-white">{profileUser.avgAccuracy || 0}%</div>
+                <div className="text-xs text-slate-500 font-mono mt-1">Lifetime Average</div>
+              </div>
+
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
+                <div className="flex items-center gap-2 mb-2 text-slate-400">
+                  <Flame className="w-4 h-4 text-orange-500" />
+                  <span className="text-xs uppercase tracking-wider font-bold">Streak</span>
+                </div>
+                <div className="text-3xl font-black text-white">{profileUser.streak || 0}</div>
+                <div className="text-xs text-orange-400 font-mono mt-1">Current Active</div>
+              </div>
+            </motion.div>
+
           </div>
-        </motion.div>
+
+          {/* Right Column: Graphs, Badges, History */}
+          <div className="lg:col-span-2 space-y-8">
+            
+            {/* Skill Graph & Badges Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              
+              {/* Skill Radar Chart */}
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl flex flex-col"
+              >
+                <div className="flex items-center gap-2 mb-6 text-white">
+                  <Target className="w-5 h-5 text-indigo-400" />
+                  <h3 className="text-lg font-bold">Skill Distribution</h3>
+                </div>
+                <div className="flex-grow min-h-[220px] w-full relative">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart cx="50%" cy="50%" outerRadius="70%" data={skillData}>
+                      <PolarGrid stroke="#334155" />
+                      <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 600 }} />
+                      <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
+                      <Radar
+                        name="Skills"
+                        dataKey="A"
+                        stroke="#818cf8"
+                        strokeWidth={2}
+                        fill="#6366f1"
+                        fillOpacity={0.4}
+                      />
+                    </RadarChart>
+                  </ResponsiveContainer>
+                </div>
+              </motion.div>
+
+              {/* Achievements & Badges */}
+              <motion.div 
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl"
+              >
+                <div className="flex items-center gap-2 mb-6 text-white">
+                  <Award className="w-5 h-5 text-yellow-400" />
+                  <h3 className="text-lg font-bold">Achievements</h3>
+                </div>
+                <div className="space-y-4">
+                  {badges.map(badge => (
+                    <div key={badge.id} className="flex items-center gap-4 bg-slate-950/50 p-3 rounded-2xl border border-slate-800">
+                      <div className={`p-3 rounded-xl ${badge.bg}`}>
+                        <badge.icon className={`w-6 h-6 ${badge.color}`} />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-200 uppercase tracking-wide">{badge.title}</h4>
+                        <p className="text-xs text-slate-400 font-mono">{badge.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+            </div>
+
+            {/* Recent Activity Timeline */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2 text-white">
+                  <Calendar className="w-5 h-5 text-cyan-400" />
+                  <h3 className="text-lg font-bold">Combat History</h3>
+                </div>
+                <span className="text-xs text-slate-500 font-mono uppercase tracking-wider font-bold">Total Quizzes: {profileUser.totalQuizzes || 0}</span>
+              </div>
+
+              <div className="space-y-4">
+                {recentActivity.map((act) => (
+                  <div key={act.id} className="flex flex-col sm:flex-row sm:items-center justify-between bg-slate-950/50 p-4 rounded-2xl border border-slate-800 gap-4 group hover:border-slate-600 transition-colors">
+                    
+                    <div className="flex items-center gap-4">
+                      <div className={`p-3 rounded-xl flex-shrink-0 ${act.result === 'Passed' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                        {act.type === 'quiz' ? <Code2 className="w-5 h-5" /> : <Terminal className="w-5 h-5" />}
+                      </div>
+                      <div>
+                        <h4 className="text-base font-bold text-slate-200">{act.title}</h4>
+                        <div className="flex items-center gap-3 mt-1 text-xs font-mono">
+                          <span className={`${act.result === 'Passed' ? 'text-emerald-400' : 'text-red-400'}`}>{act.result}</span>
+                          <span className="text-slate-600">•</span>
+                          <span className="text-slate-400">{act.date}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex sm:flex-col items-center sm:items-end justify-between gap-2 border-t sm:border-t-0 border-slate-800 pt-3 sm:pt-0">
+                      <div className="flex items-center gap-1.5 bg-slate-900 px-3 py-1 rounded-full border border-slate-700 w-fit">
+                        <Star className={`w-3 h-3 ${act.result === 'Passed' ? 'text-emerald-400' : 'text-slate-500'}`} />
+                        <span className="font-mono text-sm font-bold text-slate-300">{act.xp} XP</span>
+                      </div>
+                      <span className="text-xs text-slate-500 font-mono hidden sm:block">Accuracy: {act.accuracy}</span>
+                    </div>
+
+                  </div>
+                ))}
+              </div>
+
+              <button className="w-full mt-6 py-3 border border-slate-800 rounded-xl text-sm font-bold text-slate-400 hover:bg-slate-800 hover:text-white transition-colors uppercase tracking-widest font-mono">
+                View Full History
+              </button>
+            </motion.div>
+
+          </div>
+        </div>
       </div>
     </div>
   );
 };
+
 export default Profile;

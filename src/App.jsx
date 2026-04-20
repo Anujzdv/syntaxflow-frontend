@@ -28,6 +28,7 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/feed" element={<Feed />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:id" element={<Profile />} />
             
             {/* Quiz Routes */}
             <Route path="/quiz" element={<QuizSelection />} />
