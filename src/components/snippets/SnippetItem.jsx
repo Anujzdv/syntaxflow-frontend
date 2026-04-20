@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Share2, Code2, MessageSquare, Send } from 'lucide-react';
 import api from '../../services/api';
+import AuthContext from '../../context/AuthContext';
 
 const SnippetItem = ({ snippet, onLike }) => {
-  const [liked, setLiked] = useState(false);
+  const { user } = useContext(AuthContext) || {};
+  const [liked, setLiked] = useState(snippet.likes?.includes(user?._id) || false);
   const [likes, setLikes] = useState(snippet.likes?.length || 0);
   const [comments, setComments] = useState(snippet.comments || []);
   const [showComments, setShowComments] = useState(false);
