@@ -24,43 +24,30 @@ const Profile = () => {
 
   const isOwnProfile = !id || (authUser && id === authUser._id);
 
-  // Mock data for the Skill Graph and History until Backend is updated
-  const skillData = [
-    { subject: 'JavaScript', A: 90, fullMark: 100 },
-    { subject: 'React', A: 75, fullMark: 100 },
-    { subject: 'Node.js', A: 85, fullMark: 100 },
-    { subject: 'Python', A: 60, fullMark: 100 },
-    { subject: 'MongoDB', A: 70, fullMark: 100 },
-    { subject: 'CSS/UI', A: 80, fullMark: 100 },
-  ];
-
-  const recentActivity = [
-    { id: 1, type: 'quiz', title: 'Advanced React Hooks', result: 'Passed', xp: '+100', date: '2 hours ago', accuracy: '95%' },
-    { id: 2, type: 'quiz', title: 'JavaScript Mastery', result: 'Passed', xp: '+150', date: '1 day ago', accuracy: '100%' },
-    { id: 3, type: 'quiz', title: 'MongoDB Aggregations', result: 'Failed', xp: '+10', date: '3 days ago', accuracy: '45%' },
-  ];
-
-  const badges = [
-    { id: 1, icon: Flame, color: 'text-orange-500', bg: 'bg-orange-500/10', title: '7-Day Streak', desc: 'Played 7 days in a row' },
-    { id: 2, icon: Target, color: 'text-emerald-500', bg: 'bg-emerald-500/10', title: 'Sharpshooter', desc: '90%+ Avg Accuracy' },
-    { id: 3, icon: Trophy, color: 'text-yellow-500', bg: 'bg-yellow-500/10', title: 'Top 10 Weekly', desc: 'Ranked in top 10' },
-  ];
+  const IconMap = {
+    Flame,
+    Target,
+    Trophy,
+    Award,
+    Star,
+    Zap,
+    Code2,
+    Database,
+    Layout,
+    Server,
+    Activity,
+    Calendar
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
       setLoading(true);
+      setError(null);
       try {
         if (isOwnProfile && authUser) {
-          // If viewing own profile, we might fetch /api/users/me for deep stats 
-          // or just use the authUser object for now
-          try {
-            const res = await api.get('/api/auth/me'); // Assuming an endpoint exists or just map authUser
-            setProfileUser(res.data?.user || authUser);
-          } catch(_e) {
-             setProfileUser(authUser);
-          }
+          const res = await api.get('/api/auth/me');
+          setProfileUser(res.data);
         } else if (id) {
-          // Fetch specific user profile
           const res = await api.get(`/api/users/${id}`);
           setProfileUser(res.data);
         }
@@ -231,7 +218,7 @@ const Profile = () => {
                 </div>
                 <div className="flex-grow min-h-[220px] w-full relative">
                   <ResponsiveContainer width="100%" height="100%">
-                    <RadarChart cx="50%" cy="50%" outerRadius="70%" data={skillData}>
+                    <RadarChart cx="50%" cy="50%" outerRadius="70%" data={profileUser.skillData || []}>
                       <PolarGrid stroke="#334155" />
                       <PolarAngleAxis dataKey="subject" tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 600 }} />
                       <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
@@ -260,17 +247,19 @@ const Profile = () => {
                   <h3 className="text-lg font-bold">Achievements</h3>
                 </div>
                 <div className="space-y-4">
-                  {badges.map(badge => (
+                  {(profileUser.badges || []).map(badge => {
+                    const BadgeIcon = IconMap[badge.icon] || Award;
+                    return (
                     <div key={badge.id} className="flex items-center gap-4 bg-slate-950/50 p-3 rounded-2xl border border-slate-800">
                       <div className={`p-3 rounded-xl ${badge.bg}`}>
-                        <badge.icon className={`w-6 h-6 ${badge.color}`} />
+                        <BadgeIcon className={`w-6 h-6 ${badge.color}`} />
                       </div>
                       <div>
                         <h4 className="text-sm font-bold text-slate-200 uppercase tracking-wide">{badge.title}</h4>
                         <p className="text-xs text-slate-400 font-mono">{badge.desc}</p>
                       </div>
                     </div>
-                  ))}
+                  )})}
                 </div>
               </motion.div>
 
@@ -292,7 +281,7 @@ const Profile = () => {
               </div>
 
               <div className="space-y-4">
-                {recentActivity.map((act) => (
+                {(profileUser.recentActivity || []).map((act) => (
                   <div key={act.id} className="flex flex-col sm:flex-row sm:items-center justify-between bg-slate-950/50 p-4 rounded-2xl border border-slate-800 gap-4 group hover:border-slate-600 transition-colors">
                     
                     <div className="flex items-center gap-4">
