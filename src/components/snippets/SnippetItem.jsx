@@ -1,17 +1,21 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Share2, Code2, MessageSquare, Send } from 'lucide-react';
+import { Heart, Share2, Code2, MessageSquare, Send, Loader2 } from 'lucide-react';
 import api from '../../services/api';
 import AuthContext from '../../context/AuthContext';
 
 const SnippetItem = ({ snippet, onLike }) => {
   const { user } = useContext(AuthContext) || {};
-  const [liked, setLiked] = useState(snippet.likes?.includes(user?._id) || false);
+  const [liked, setLiked] = useState(snippet.likes?.some(l => l.user === user?._id || l === user?._id) || false);
   const [likes, setLikes] = useState(snippet.likes?.length || 0);
   const [comments, setComments] = useState(snippet.comments || []);
+  const [totalComments, setTotalComments] = useState(snippet.totalComments || snippet.comments?.length || 0);
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [commentPage, setCommentPage] = useState(1);
+  const [hasMoreComments, setHasMoreComments] = useState(snippet.showMoreComments || false);
+  const [loadingComments, setLoadingComments] = useState(false);
 
   const handleLike = async () => {
     try {
@@ -25,6 +29,28 @@ const SnippetItem = ({ snippet, onLike }) => {
     }
   };
 
+  const loadMoreComments = async () => {
+    if (loadingComments || !hasMoreComments) return;
+    setLoadingComments(true);
+    try {
+      const nextPage = commentPage + 1;
+      const res = await api.get(`/api/snippets/${snippet._id}/comments?page=${nextPage}&limit=10`);
+      if (res.data && res.data.data) {
+        setComments(prev => {
+          const currentIds = new Set(prev.map(c => c._id || c.date));
+          const additions = res.data.data.filter(c => !currentIds.has(c._id || c.date));
+          return [...prev, ...additions];
+        });
+        setHasMoreComments(res.data.hasMore);
+        setCommentPage(nextPage);
+      }
+    } catch (err) {
+      console.error('Failed to load comments', err);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
@@ -33,7 +59,9 @@ const SnippetItem = ({ snippet, onLike }) => {
     try {
       const res = await api.post(`/api/snippets/${snippet._id}/comment`, { text: newComment });
       if (res.data && res.data.comments) {
+        // Backend returns entire comment array or the latest. We will just use it.
         setComments(res.data.comments);
+        setTotalComments(res.data.comments.length);
       }
       setNewComment('');
       if (onLike) onLike(); // Optionally refetch feed generally
@@ -95,7 +123,7 @@ const SnippetItem = ({ snippet, onLike }) => {
             className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors ${showComments ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'text-slate-400 hover:bg-slate-800 border border-transparent'}`}
           >
             <MessageSquare className="w-4 h-4" />
-            <span className="text-sm font-medium font-mono">{comments.length}</span>
+            <span className="text-sm font-medium font-mono">{totalComments}</span>
           </motion.button>
         </div>
         <button className="text-slate-500 hover:text-slate-300 transition-colors p-2">
@@ -132,6 +160,15 @@ const SnippetItem = ({ snippet, onLike }) => {
                       <p className="text-sm text-slate-400 pl-7">{comment.text}</p>
                     </div>
                   ))
+                )}
+                {hasMoreComments && (
+                  <button 
+                    onClick={loadMoreComments} 
+                    disabled={loadingComments}
+                    className="w-full py-2 text-xs font-bold text-slate-500 hover:text-slate-300 transition-colors uppercase tracking-widest flex justify-center items-center gap-2"
+                  >
+                    {loadingComments ? <Loader2 className="w-4 h-4 animate-spin" /> : `View ${totalComments - comments.length} more comments`}
+                  </button>
                 )}
               </div>
 
