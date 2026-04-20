@@ -10,8 +10,10 @@ import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, 
   PolarRadiusAxis, ResponsiveContainer 
 } from 'recharts';
+import { motion } from 'framer-motion';
 import AuthContext from '../context/AuthContext';
 import api from '../services/api';
+import CreateChallengeModal from '../components/CreateChallengeModal';
 
 const Profile = () => {
   const { id } = useParams();
@@ -21,6 +23,7 @@ const Profile = () => {
   const [profileUser, setProfileUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isChallengeModalOpen, setIsChallengeModalOpen] = useState(false);
 
   const isOwnProfile = !id || (authUser && id === authUser._id);
 
@@ -144,7 +147,10 @@ const Profile = () => {
                     Edit Profile
                   </button>
                 ) : (
-                  <button className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(99,102,241,0.3)] flex-1 flex items-center justify-center gap-2">
+                  <button 
+                    onClick={() => setIsChallengeModalOpen(true)}
+                    className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(99,102,241,0.3)] flex-1 flex items-center justify-center gap-2"
+                  >
                     <Target className="w-4 h-4" /> Challenge
                   </button>
                 )}
@@ -318,6 +324,13 @@ const Profile = () => {
           </div>
         </div>
       </div>
+      
+      {/* Challenge Modal */}
+      <CreateChallengeModal 
+        isOpen={isChallengeModalOpen} 
+        onClose={() => setIsChallengeModalOpen(false)} 
+        targetUser={profileUser}
+      />
     </div>
   );
 };
