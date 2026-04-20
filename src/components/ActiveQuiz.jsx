@@ -78,13 +78,18 @@ const ActiveQuiz = () => {
       const timeTaken = quizData && quizData.timeLimit ? quizData.timeLimit - timeLeft : 0;
       
       const isMongoDbId = /^[0-9a-fA-F]{24}$/.test(quizId);
-      const submitUrl = isMongoDbId ? `/api/quizzes/${quizId}/submit` : `/api/quiz/submit`;
+      const submitUrl = isMongoDbId ? `/api/quizzes/${quizId}/submit` : `/api/quiz/${quizId}/submit`;
       
+      const token = localStorage.getItem('token');
       const response = await api.post(submitUrl, {
         quizId: !isMongoDbId ? quizId : undefined, // Legacy endpoint expects this
         answers: formattedAnswers,
         tabSwitchCount: tabSwitchCount,
         timeTaken: timeTaken
+      }, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       // Navigate to results
       navigate('/quiz/result', { state: { result: response.data } }); 
