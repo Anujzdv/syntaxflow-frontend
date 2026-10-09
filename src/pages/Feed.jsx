@@ -100,7 +100,11 @@ const Feed = () => {
           ) : (
             snippets.map((snippet) => (
               <div key={snippet._id} className="snap-start min-h-[calc(100vh-64px)] flex flex-col justify-center items-center py-8 px-4 w-full">
-                <SnippetItem snippet={snippet} onLike={() => {}} />
+                <SnippetItem 
+                  snippet={snippet} 
+                  onLike={() => {}} 
+                  onDelete={(deletedId) => setSnippets(prev => prev.filter(s => s._id !== deletedId))}
+                />
               </div>
             ))
           )}

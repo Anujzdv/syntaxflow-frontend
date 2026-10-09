@@ -13,6 +13,7 @@ import ActiveQuiz from './components/ActiveQuiz';
 import QuizResult from './pages/QuizResult';
 import Leaderboard from './pages/Leaderboard';
 import Challenges from './pages/Challenges';
+import AdaptivePractice from './pages/AdaptivePractice';
 
 function App() {
   return (
@@ -33,6 +34,8 @@ function App() {
             
             {/* Quiz Routes */}
             <Route path="/quiz" element={<QuizSelection />} />
+            <Route path="/adaptive" element={<AdaptivePractice />} />
+            <Route path="/quiz/adaptive" element={<AdaptivePractice />} />
             <Route path="/quiz/:quizId" element={<ActiveQuiz />} />
             <Route path="/quiz/result" element={<QuizResult />} />
             

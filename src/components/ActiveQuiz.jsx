@@ -34,7 +34,10 @@ const ActiveQuiz = () => {
         // Ensure data exists and is in correct format.
         // Assuming data is array of questions or an object with a questions array
         const questions = Array.isArray(data) ? data : data.questions || [];
-        const timeLimit = data.timeLimit || questions.length * 60;
+        // Dynamic quiz timing: approx 30 seconds per question
+        const timeLimit = (data.timeLimit && data.timeLimit !== 600) 
+          ? data.timeLimit 
+          : Math.max(30, questions.length * 30);
         
         setQuizData({ questions, title: data.title || `Quiz ${quizId}`, timeLimit });
         setTimeLeft(timeLimit);
@@ -77,15 +80,13 @@ const ActiveQuiz = () => {
     try {
       const timeTaken = quizData && quizData.timeLimit ? quizData.timeLimit - timeLeft : 0;
       
-      const isMongoDbId = /^[0-9a-fA-F]{24}$/.test(quizId);
-      const submitUrl = `/api/quizzes/${quizId}/submit`;
-      
-      const token = localStorage.getItem('token');
+      const targetId = quizData?._id || quizId;
+      const submitUrl = `/api/quizzes/${targetId}/submit`;
       const response = await api.post(submitUrl, {
-        
         answers: formattedAnswers,
         tabSwitchCount: tabSwitchCount,
-        timeTaken: timeTaken
+        timeTaken: timeTaken,
+        language: quizData?.language || quizId
       });
       // Navigate to results
       navigate('/quiz/result', { state: { result: response.data } }); 
@@ -217,8 +218,17 @@ const ActiveQuiz = () => {
               <h1 className="text-xl md:text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400">
                 {quizData.title}
               </h1>
-              <p className="text-slate-400 text-sm mt-1">
-                Question {currentQuestionIndex + 1} of {quizData.questions.length}
+              <p className="text-slate-400 text-sm mt-1 flex flex-wrap items-center gap-2">
+                <span>Question {currentQuestionIndex + 1} of {quizData.questions.length}</span>
+                {isMultipleChoice ? (
+                  <span className="text-[11px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded-full font-mono font-bold">
+                    ☑️ Select All That Apply
+                  </span>
+                ) : (
+                  <span className="text-[11px] bg-slate-800 text-slate-400 border border-slate-700 px-2 py-0.5 rounded-full font-mono">
+                    🔘 Single Choice
+                  </span>
+                )}
               </p>
             </div>
             

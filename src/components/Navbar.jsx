@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Terminal, User, LogOut, Zap, Trophy, LayoutDashboard, Menu, X, Swords } from 'lucide-react';
+import { Terminal, User, LogOut, Zap, Trophy, LayoutDashboard, Menu, X, Swords, Sparkles } from 'lucide-react';
 import AuthContext from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -26,6 +26,9 @@ const Navbar = () => {
           </Link>
           <Link to="/quiz" onClick={closeMenu} className={`flex items-center gap-2 text-slate-300 hover:text-emerald-400 transition-colors text-sm font-medium ${mobile ? 'py-3 border-b border-slate-800' : ''}`}>
             <Zap className="w-4 h-4" /> Quizzes
+          </Link>
+          <Link to="/adaptive" onClick={closeMenu} className={`flex items-center gap-2 text-cyan-300 hover:text-cyan-200 transition-colors text-sm font-medium ${mobile ? 'py-3 border-b border-slate-800' : ''}`}>
+            <Sparkles className="w-4 h-4 text-cyan-400" /> Adaptive
           </Link>
           <Link to="/leaderboard" onClick={closeMenu} className={`flex items-center gap-2 text-slate-300 hover:text-yellow-400 transition-colors text-sm font-medium ${mobile ? 'py-3 border-b border-slate-800' : ''}`}>
             <Trophy className="w-4 h-4" /> Leaderboard

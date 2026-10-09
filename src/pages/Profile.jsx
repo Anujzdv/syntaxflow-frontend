@@ -1,31 +1,35 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, Terminal, Trophy, Star, Target, Zap, 
   Flame, Award, Code2, Database, Layout, Server, 
-  Activity, Calendar, Loader2
+  Activity, Calendar, Loader2, X, Edit3
 } from 'lucide-react';
 import { 
   Radar, RadarChart, PolarGrid, PolarAngleAxis, 
   PolarRadiusAxis, ResponsiveContainer 
 } from 'recharts';
-import { motion } from 'framer-motion';
 import AuthContext from '../context/AuthContext';
 import api from '../services/api';
 import CreateChallengeModal from '../components/CreateChallengeModal';
 
 const Profile = () => {
   const { id } = useParams();
-  const { user: authUser } = useContext(AuthContext) || {};
+  const { user: authUser, setUser } = useContext(AuthContext) || {};
   const navigate = useNavigate();
 
   const [profileUser, setProfileUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isChallengeModalOpen, setIsChallengeModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editBio, setEditBio] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [editError, setEditError] = useState(null);
 
-  const isOwnProfile = !id || (authUser && id === authUser._id);
+  const isOwnProfile = !id || (authUser && (String(id) === String(authUser._id || authUser.id)));
 
   const IconMap = {
     Flame,
@@ -65,6 +69,48 @@ const Profile = () => {
     fetchProfile();
   }, [id, authUser, isOwnProfile]);
 
+  const handleOpenEditModal = () => {
+    setEditName(profileUser?.name || profileUser?.username || '');
+    setEditBio(profileUser?.bio || '');
+    setEditError(null);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    if (!editName.trim()) {
+      setEditError('Display name cannot be empty.');
+      return;
+    }
+    setIsSaving(true);
+    setEditError(null);
+    try {
+      const res = await api.put('/api/users/profile', {
+        name: editName.trim(),
+        bio: editBio.trim()
+      });
+      setProfileUser(prev => ({
+        ...prev,
+        name: editName.trim(),
+        bio: editBio.trim(),
+        ...(res.data?.user || {})
+      }));
+      if (setUser) {
+        setUser(prev => ({
+          ...prev,
+          name: editName.trim(),
+          bio: editBio.trim()
+        }));
+      }
+      setIsEditModalOpen(false);
+    } catch (err) {
+      console.error('Failed to update profile:', err);
+      setEditError(err.response?.data?.message || 'Failed to update profile.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center">
@@ -89,7 +135,8 @@ const Profile = () => {
 
   // Derived stats
   const level = Math.floor((profileUser.xp || 0) / 100) + 1;
-  const isTopRanked = profileUser.rank && profileUser.rank <= 10;
+  const userRank = profileUser.rank || profileUser.globalRank;
+  const isTopRanked = userRank && userRank <= 10;
 
   return (
     <div className="min-h-screen bg-slate-950 pt-20 pb-12 px-4 relative overflow-hidden">
@@ -136,15 +183,22 @@ const Profile = () => {
               <h1 className="text-3xl font-black text-white mb-1">
                 {profileUser.name || profileUser.username}
               </h1>
-              <p className="text-indigo-400 font-mono mb-4">@{profileUser.username}</p>
+              <p className="text-indigo-400 font-mono mb-2">@{profileUser.username}</p>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700 mb-4">
+                <Trophy className="w-3.5 h-3.5 text-yellow-400" />
+                <span>Rank #{userRank || 'Unranked'}</span>
+              </div>
               <p className="text-slate-400 text-sm mb-6 leading-relaxed">
                 {profileUser.bio || "SyntaxFlow challenger carving their path to the top of the leaderboard."}
               </p>
 
               <div className="flex justify-center gap-3">
                 {isOwnProfile ? (
-                  <button className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-medium transition-colors border border-slate-700 flex-1">
-                    Edit Profile
+                  <button 
+                    onClick={handleOpenEditModal}
+                    className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-medium transition-colors border border-slate-700 flex-1 flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Edit3 className="w-4 h-4 text-cyan-400" /> Edit Profile
                   </button>
                 ) : (
                   <button 
@@ -331,6 +385,100 @@ const Profile = () => {
         onClose={() => setIsChallengeModalOpen(false)} 
         targetUser={profileUser}
       />
+
+      {/* Edit Profile Modal */}
+      <AnimatePresence>
+        {isEditModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl relative"
+            >
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="absolute top-6 right-6 p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400">
+                  <Edit3 className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Edit Profile</h2>
+                  <p className="text-xs text-slate-400 font-mono">Update your public identity</p>
+                </div>
+              </div>
+
+              {editError && (
+                <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-sm font-mono">
+                  {editError}
+                </div>
+              )}
+
+              <form onSubmit={handleSaveProfile} className="space-y-5">
+                <div>
+                  <label className="block text-xs font-mono text-slate-400 uppercase tracking-wider mb-2">
+                    Display Name
+                  </label>
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    maxLength={50}
+                    placeholder="Your display name"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition-colors text-sm"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono text-slate-400 uppercase tracking-wider mb-2">
+                    Bio
+                  </label>
+                  <textarea
+                    value={editBio}
+                    onChange={(e) => setEditBio(e.target.value)}
+                    maxLength={200}
+                    rows={4}
+                    placeholder="Tell other developers about your skills..."
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:border-cyan-500 transition-colors text-sm resize-none"
+                  />
+                  <div className="text-right text-xs font-mono text-slate-500 mt-1">
+                    {editBio.length}/200
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditModalOpen(false)}
+                    className="flex-1 py-3 px-4 rounded-xl border border-slate-800 text-slate-300 hover:bg-slate-800 font-mono text-sm transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSaving}
+                    className="flex-1 py-3 px-4 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold font-mono text-sm transition-colors flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(6,182,212,0.3)] disabled:opacity-50"
+                  >
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" /> Saving...
+                      </>
+                    ) : (
+                      'Save Changes'
+                    )}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

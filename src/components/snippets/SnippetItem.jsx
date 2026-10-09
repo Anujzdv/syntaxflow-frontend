@@ -1,16 +1,35 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Share2, Code2, MessageSquare, Send, Loader2 } from 'lucide-react';
+import { Heart, Share2, Code2, MessageSquare, Send, Loader2, Flag, Trash2 } from 'lucide-react';
 import api from '../../services/api';
 import AuthContext from '../../context/AuthContext';
+import ShareModal from './ShareModal';
+import ReportModal from './ReportModal';
 
-const SnippetItem = ({ snippet, onLike }) => {
+const SnippetItem = ({ snippet, onLike, onDelete }) => {
   const { user } = useContext(AuthContext) || {};
-  const [liked, setLiked] = useState(snippet.likes?.some(l => l.user === user?._id || l === user?._id) || false);
+  const currentUserId = String(user?._id || user?.id || '');
+
+  const isLikedByMe = (likesArray) => {
+    if (!currentUserId || !Array.isArray(likesArray)) return false;
+    return likesArray.some(l => {
+      const id = String(l?.user?._id || l?.user || l?._id || l || '');
+      return id && id === currentUserId;
+    });
+  };
+
+  const isCreator = currentUserId && (currentUserId === String(snippet.user?._id || snippet.user || ''));
+  const isAdmin = user?.role === 'admin';
+  const canDelete = isCreator || isAdmin;
+
+  const [liked, setLiked] = useState(() => isLikedByMe(snippet.likes));
   const [likes, setLikes] = useState(snippet.likes?.length || 0);
   const [comments, setComments] = useState(snippet.comments || []);
   const [totalComments, setTotalComments] = useState(snippet.totalComments || snippet.comments?.length || 0);
   const [showComments, setShowComments] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [commentPage, setCommentPage] = useState(1);
@@ -20,12 +39,41 @@ const SnippetItem = ({ snippet, onLike }) => {
   const handleLike = async () => {
     try {
       const res = await api.post(`/api/snippets/${snippet._id}/like`);
-      setLiked(!liked);
-      // Use likesCount from the backend response if available, or fallback
-      setLikes(res.data?.likesCount !== undefined ? res.data.likesCount : (liked ? likes - 1 : likes + 1));
+      const newLikes = res.data?.likes;
+      if (Array.isArray(newLikes)) {
+        setLiked(isLikedByMe(newLikes));
+        setLikes(newLikes.length);
+      } else {
+        setLiked(!liked);
+        setLikes(res.data?.likesCount !== undefined ? res.data.likesCount : (liked ? likes - 1 : likes + 1));
+      }
       if (onLike) onLike();
     } catch (err) {
       console.error('Like failed', err);
+    }
+  };
+
+  const handleDelete = async () => {
+    const confirmMsg = isAdmin && !isCreator
+      ? 'Moderator Action: Are you sure you want to permanently remove this inappropriate post from SyntaxFlow?'
+      : 'Are you sure you want to delete your code snippet? This cannot be undone.';
+    
+    if (!window.confirm(confirmMsg)) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const deleteUrl = isAdmin && !isCreator
+        ? `/api/admin/snippet/${snippet._id}`
+        : `/api/snippets/${snippet._id}`;
+      await api.delete(deleteUrl);
+      if (onDelete) onDelete(snippet._id);
+    } catch (err) {
+      console.error('Delete snippet failed:', err);
+      alert(err.response?.data?.msg || err.response?.data?.message || 'Failed to delete snippet.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -58,13 +106,13 @@ const SnippetItem = ({ snippet, onLike }) => {
     setIsSubmitting(true);
     try {
       const res = await api.post(`/api/snippets/${snippet._id}/comment`, { text: newComment });
-      if (res.data && res.data.comments) {
-        // Backend returns entire comment array or the latest. We will just use it.
-        setComments(res.data.comments);
-        setTotalComments(res.data.comments.length);
+      if (res.data) {
+        const updated = Array.isArray(res.data) ? res.data : res.data.comments || [];
+        setComments(updated);
+        setTotalComments(updated.length);
       }
       setNewComment('');
-      if (onLike) onLike(); // Optionally refetch feed generally
+      if (onLike) onLike();
     } catch (err) {
       console.error('Comment failed', err);
     } finally {
@@ -76,7 +124,7 @@ const SnippetItem = ({ snippet, onLike }) => {
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-[#0f172a] rounded-2xl border border-slate-800 p-6 shadow-lg group hover:border-slate-700 transition-colors w-full max-w-2xl"
+      className="bg-[#0f172a] rounded-2xl border border-slate-800 p-6 shadow-lg group hover:border-slate-700 transition-colors w-full max-w-2xl relative"
     >
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
@@ -111,7 +159,7 @@ const SnippetItem = ({ snippet, onLike }) => {
           <motion.button 
             whileTap={{ scale: 0.9 }}
             onClick={handleLike}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors ${liked ? 'bg-pink-500/10 text-pink-500 border border-pink-500/20' : 'text-slate-400 hover:bg-slate-800 border border-transparent'}`}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors cursor-pointer ${liked ? 'bg-pink-500/10 text-pink-500 border border-pink-500/20' : 'text-slate-400 hover:bg-slate-800 border border-transparent'}`}
           >
             <Heart className={`w-4 h-4 ${liked ? 'fill-pink-500' : ''}`} />
             <span className="text-sm font-medium font-mono">{likes}</span>
@@ -120,16 +168,59 @@ const SnippetItem = ({ snippet, onLike }) => {
           <motion.button 
             whileTap={{ scale: 0.9 }}
             onClick={() => setShowComments(!showComments)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors ${showComments ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'text-slate-400 hover:bg-slate-800 border border-transparent'}`}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full transition-colors cursor-pointer ${showComments ? 'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20' : 'text-slate-400 hover:bg-slate-800 border border-transparent'}`}
           >
             <MessageSquare className="w-4 h-4" />
             <span className="text-sm font-medium font-mono">{totalComments}</span>
           </motion.button>
         </div>
-        <button className="text-slate-500 hover:text-slate-300 transition-colors p-2">
-          <Share2 className="w-4 h-4" />
-        </button>
+
+        <div className="flex items-center gap-1.5">
+          <motion.button 
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setIsShareOpen(true)}
+            title="Share Snippet"
+            className="text-slate-400 hover:text-cyan-400 hover:bg-slate-800/80 transition-colors p-2 rounded-full cursor-pointer"
+          >
+            <Share2 className="w-4 h-4" />
+          </motion.button>
+
+          <motion.button 
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setIsReportOpen(true)}
+            title="Report Inappropriate Content"
+            className="text-slate-400 hover:text-amber-400 hover:bg-amber-500/10 transition-colors p-2 rounded-full cursor-pointer"
+          >
+            <Flag className="w-4 h-4" />
+          </motion.button>
+
+          {canDelete && (
+            <motion.button 
+              whileTap={{ scale: 0.9 }}
+              onClick={handleDelete}
+              disabled={isDeleting}
+              title={isAdmin && !isCreator ? "Remove Inappropriate Post (Admin)" : "Delete Post"}
+              className="text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-colors p-2 rounded-full cursor-pointer"
+            >
+              {isDeleting ? <Loader2 className="w-4 h-4 animate-spin text-red-400" /> : <Trash2 className="w-4 h-4" />}
+            </motion.button>
+          )}
+        </div>
       </div>
+
+      {/* Share Modal Dialog */}
+      <ShareModal 
+        isOpen={isShareOpen}
+        onClose={() => setIsShareOpen(false)}
+        snippet={snippet}
+      />
+
+      {/* Report Inappropriate Post Modal */}
+      <ReportModal
+        isOpen={isReportOpen}
+        onClose={() => setIsReportOpen(false)}
+        snippet={snippet}
+      />
 
       {/* Expandable Comments Section */}
       <AnimatePresence>
@@ -198,4 +289,5 @@ const SnippetItem = ({ snippet, onLike }) => {
     </motion.div>
   );
 };
+
 export default SnippetItem;

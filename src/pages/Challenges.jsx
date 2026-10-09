@@ -28,7 +28,7 @@ const Challenges = () => {
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-cyan-500/10 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="max-w-5xl mx-auto relative z-10 space-y-8">
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-black text-white flex items-center gap-3">
               <Swords className="w-8 h-8 text-indigo-400" />
@@ -36,6 +36,12 @@ const Challenges = () => {
             </h1>
             <p className="text-slate-400 mt-2 font-mono">Face off against your peers.</p>
           </div>
+          <button 
+            onClick={() => navigate('/leaderboard')}
+            className="px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-500 hover:to-cyan-500 text-white font-bold rounded-xl text-sm transition-all shadow-[0_0_20px_rgba(99,102,241,0.3)] flex items-center gap-2 w-fit"
+          >
+            <Swords className="w-4 h-4" /> Find Opponent on Leaderboard
+          </button>
         </header>
 
         {/* Custom Tabs */}
@@ -118,7 +124,7 @@ const Challenges = () => {
                     <EmptyState icon={History} text="No challenge history found." />
                   ) : (
                     history.map(c => (
-                      <HistoryCard key={c._id} challenge={c} />
+                      <HistoryCard key={c._id} challenge={c} navigate={navigate} />
                     ))
                   )
                 )}
@@ -142,13 +148,13 @@ const EmptyState = ({ icon: Icon, text }) => (
 
 const ChallengeCard = ({ challenge, user, isIncoming, onAccept, onDecline, navigate }) => (
   <div className="group flex flex-col md:flex-row md:items-center justify-between bg-slate-950/50 p-4 rounded-2xl border border-slate-800 gap-4 transition-colors hover:border-slate-700">
-    <div className="flex items-center gap-4 cursor-pointer" onClick={() => navigate(`/profile/${user._id}`)}>
+    <div className="flex items-center gap-4 cursor-pointer" onClick={() => user?._id && navigate(`/profile/${user._id}`)}>
       <div className="w-12 h-12 rounded-full overflow-hidden border border-slate-700 bg-slate-800">
-        <img src={user.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`} alt={user.name} className="w-full h-full object-cover" />
+        <img src={user?.profileImage || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username || 'user'}`} alt={user?.name || 'User'} className="w-full h-full object-cover" />
       </div>
       <div>
         <h3 className="text-base font-bold text-slate-200 group-hover:text-indigo-400 transition-colors">
-          {isIncoming ? `Challenged by ${user.name}` : `Challenging ${user.name}`}
+          {isIncoming ? `Challenged by ${user?.name || 'Player'}` : `Challenging ${user?.name || 'Player'}`}
         </h3>
         <p className="text-xs font-mono text-slate-500 uppercase tracking-wider">
           {challenge.topic} • {challenge.difficulty}
@@ -181,7 +187,7 @@ const ChallengeCard = ({ challenge, user, isIncoming, onAccept, onDecline, navig
   </div>
 );
 
-const HistoryCard = ({ challenge }) => {
+const HistoryCard = ({ challenge, navigate }) => {
   const isAccepted = challenge.status === 'accepted';
   const isCompleted = challenge.status === 'completed';
   const statusColor = 
@@ -195,15 +201,28 @@ const HistoryCard = ({ challenge }) => {
         <Swords className="w-5 h-5 text-slate-500" />
         <div>
           <h3 className="text-base font-bold text-slate-200">
-            {challenge.challenger.name} <span className="text-slate-500 font-mono text-sm mx-1">vs</span> {challenge.targetUser.name}
+            {challenge.challenger?.name || 'Challenger'} <span className="text-slate-500 font-mono text-sm mx-1">vs</span> {challenge.targetUser?.name || 'Opponent'}
           </h3>
           <p className="text-xs font-mono text-slate-500 uppercase tracking-wider">
             {challenge.topic} • {challenge.difficulty}
+            {isCompleted && challenge.winner && (
+              <span className="text-yellow-400 ml-2 font-bold">• Winner: {challenge.winner?.name || 'Champion'}</span>
+            )}
           </p>
         </div>
       </div>
-      <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${statusColor}`}>
-        {challenge.status}
+      <div className="flex items-center gap-3">
+        {isAccepted && (
+          <button 
+            onClick={() => navigate(`/quiz/${challenge.quizId || challenge.topic}`)}
+            className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold font-mono flex items-center gap-1.5 transition-all shadow-[0_0_15px_rgba(99,102,241,0.4)]"
+          >
+            Battle Now <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        )}
+        <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${statusColor}`}>
+          {challenge.status}
+        </div>
       </div>
     </div>
   );

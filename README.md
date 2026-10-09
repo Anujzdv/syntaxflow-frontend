@@ -1,316 +1,121 @@
-# 💻 Syntax Flow - Frontend
+# 💻 Syntax|Flow — Frontend
 
-**Real-time Code Execution & Collaboration Platform - UI**
+**Competitive Developer Quiz, Challenge Arena & Adaptive Practice Platform**
 
-A modern, responsive React-based frontend for the Syntax Flow platform, featuring real-time code editing, instant execution feedback, and seamless collaboration capabilities.
+A high-performance React application built with Vite, Tailwind CSS, and Framer Motion. Features a cybersecurity-inspired dark mode UI, interactive timed quizzes, a peer challenge arena, developer snippet feed, and an **Adaptive AI Practice Mode** that dynamically calibrates question difficulty to match user mastery.
 
-![React](https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black)
-![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-7-646CFF?style=flat-square&logo=vite&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-3-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
+![Framer Motion](https://img.shields.io/badge/Framer_Motion-12-FF0055?style=flat-square)
 
 ---
 
 ## 📋 Table of Contents
 
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Development](#development)
-- [Build & Deployment](#build--deployment)
-- [Browser Support](#browser-support)
+- [Features](#-features)
+- [Adaptive Practice Mode UI](#-adaptive-practice-mode-ui)
+- [Tech Stack](#-tech-stack)
+- [Project Structure](#-project-structure)
+- [Configuration](#-configuration)
+- [Development & Verification](#-development--verification)
+- [Production Deployment](#-production-deployment)
 
 ---
 
 ## ✨ Features
 
-- ✅ **Live Code Editor** - Real-time code editing with syntax highlighting
-- ✅ **Instant Output Display** - See code results immediately
-- ✅ **Multi-Language Support** - JavaScript, Python, C++, Java
-- ✅ **User Authentication** - Secure Firebase login/signup
-- ✅ **Project Management** - Create, save, and organize projects
-- ✅ **Real-time Collaboration** - Collaborate with other developers
-- ✅ **Code Sharing** - Share projects via links
-- ✅ **Execution History** - Track all code executions
-- ✅ **Responsive Design** - Works on desktop, tablet, mobile
-- ✅ **Dark Mode** - Eye-friendly dark theme support
+- **Adaptive Practice Mode** (`/adaptive`) — Interactive practice mode with real-time difficulty indicators (Easy, Medium, Hard), instant pedagogical explanations, and algorithmic performance recommendations.
+- **Timed Technical Quizzes** (`/quiz/:quizId`) — Timed question sequences with tab-switch anti-cheat detection, countdown timers, and XP calculation.
+- **Challenge Arena** (`/challenges`) — Direct peer challenges with live wager status, accept/decline flows, and results.
+- **Developer Social Feed** (`/feed`) — Infinite-scroll code snippet feed with syntax highlighting, like counters, and threaded comments.
+- **Ascension Leaderboard** (`/leaderboard`) — Interactive podium highlighting top engineers across timeframes and languages.
+- **Developer Profile** (`/profile`) — Detailed radar charts, accuracy statistics, language mastery breakdowns, and attempt history.
+
+---
+
+## 🧠 Adaptive Practice Mode UI
+
+The Adaptive Practice Mode provides an interactive, low-stakes training environment:
+1. **Interactive Setup**: Choose language (`JavaScript`, `Python`, `Java`, `C++`, `C`), topic (`arrays`, `functions`, `memory`, `general`), and starting difficulty.
+2. **Instant Feedback**: Submissions receive server-graded feedback immediately, revealing the correct option and conceptual explanation.
+3. **Dynamic Adaptation Indicator**: Visually alerts the user when difficulty increases, decreases, or maintains based on consecutive performance.
+4. **Session Summary**: Displays overall accuracy %, question breakdown, and algorithmic recommendations upon finishing.
 
 ---
 
 ## 🛠 Tech Stack
 
-### **Frontend Framework**
-- **React** - UI library
-- **JavaScript/ES6+** - Programming language
-- **Vite** - Build tool and dev server
-
-### **Styling**
-- **Tailwind CSS** - Utility-first CSS framework
-- **CSS3** - Additional styling
-
-### **Code Editor**
-- **Monaco Editor** / **CodeMirror** - Advanced code editor
-- **Syntax Highlighting** - Language-specific highlighting
-
-### **State Management**
-- **Context API** - State management
-- **Custom Hooks** - Reusable logic
-
-### **Authentication & API**
-- **Firebase Client SDK** - Authentication
-- **REST API** - Backend communication
-- **Axios** - HTTP client
-
-### **Real-time Communication**
-- **Socket.io** - Real-time updates
-- **WebSocket** - Two-way communication
+- **Framework**: React 18 + Vite
+- **Styling**: Tailwind CSS with custom glowing cyber aesthetic
+- **Animations**: Framer Motion
+- **Icons**: Lucide React
+- **Data Visualization**: Recharts
+- **HTTP Client**: Axios with automatic JWT interceptors and fallback resolution
+- **Linting**: ESLint 9
 
 ---
 
-## 🚀 Installation
+## 📁 Project Structure
 
-### Prerequisites
-
-- **Node.js** (v16.x or higher)
-- **npm** (v7.x or higher)
-- **Git**
-
-### Step 1: Clone the Repository
-
-```bash
-git clone https://github.com/Anujzdv/syntaxflow-frontend.git
-cd syntaxflow-frontend
 ```
-
-### Step 2: Install Dependencies
-
-```bash
-npm install
+src/
+├── components/          # Reusable UI components (Navbar, ActiveQuiz, ProtectedRoute, etc.)
+│   └── snippets/        # Feed snippet items and comment dialogs
+├── context/             # Authentication context and provider
+├── pages/               # Top-level view routes
+│   ├── AdaptivePractice.jsx  # Adaptive AI practice interface & summary
+│   ├── Challenges.jsx        # 1v1 Arena challenges
+│   ├── Feed.jsx              # Code snippet feed
+│   ├── Home.jsx              # Hero landing page
+│   ├── Leaderboard.jsx       # Ranked podium and leaderboard
+│   ├── Login.jsx             # User authentication
+│   ├── Profile.jsx           # User statistics & profile
+│   ├── QuizResult.jsx        # Timed quiz completion screen
+│   ├── QuizSelection.jsx     # Quiz tracks & Adaptive Mode hero card
+│   └── Register.jsx          # User registration
+├── services/            # Axios API client with dynamic base URL
+├── App.jsx              # Application router
+└── main.jsx             # React entry point
 ```
 
 ---
 
 ## ⚙️ Configuration
 
-### Step 1: Create Environment File
+Create `.env` in the frontend directory based on `.env.example`:
 
 ```bash
-cp .env.example .env.local
-```
-
-### Step 2: Configure Environment Variables
-
-Edit `.env.local`:
-
-```env
+# Point to your local or deployed backend API
 VITE_API_URL=http://localhost:5000
-VITE_API_URL_PROD=https://api.syntaxflow.com
-
-VITE_FIREBASE_API_KEY=your-api-key
-VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your-project-id
-VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
-VITE_FIREBASE_APP_ID=your-app-id
-
-VITE_APP_NAME=Syntax Flow
-VITE_ENABLE_DARK_MODE=true
+VITE_APP_NAME=Syntax|Flow
 ```
-
-### Step 3: Get Firebase Configuration
-
-1. Go to [Firebase Console](https://console.firebase.google.com)
-2. Select your project
-3. Go to **Project Settings** → **General**
-4. Scroll to "Your apps" and copy Web app configuration
-5. Paste values in `.env.local`
 
 ---
 
-## 🔧 Development
-
-### Start Development Server
+## 🧪 Development & Verification
 
 ```bash
+# Install dependencies
+npm install
+
+# Run ESLint (0 errors)
+npm run lint
+
+# Build for production
+npm run build
+
+# Start local development server
 npm run dev
 ```
 
-Frontend runs at: `http://localhost:5173`
-
-### Available Scripts
-
-```bash
-npm run dev       # Start dev server
-npm run build     # Build for production
-npm run preview   # Preview production build
-npm run test      # Run tests
-npm run lint      # Run linter
-npm run format    # Format code
-```
-
 ---
 
-## 🏗️ Build & Deployment
+## 🚀 Production Deployment
 
-### Build for Production
-
-```bash
-npm run build
-```
-
-Output: `dist/` directory
-
-### Preview Production Build
-
-```bash
-npm run preview
-```
-
----
-
-### Deploy to Vercel
-
-**Option 1: Vercel Dashboard**
-
-1. Push code to GitHub
-2. Go to [Vercel](https://vercel.com)
-3. Click "New Project"
-4. Import your GitHub repository
-5. Select "React" framework
-6. Add environment variables
-7. Click "Deploy"
-
-**Option 2: Vercel CLI**
-
-```bash
-npm i -g vercel
-vercel login
-vercel --prod
-```
-
-### Deploy to Netlify
-
-```bash
-npm i -g netlify-cli
-netlify login
-netlify deploy --prod --dir=dist
-```
-
----
-
-## 📖 Usage Guide
-
-### 1. Getting Started
-
-- Sign up with email and password
-- Or login with existing account
-
-### 2. Creating a New Project
-
-1. Click "New Project" button
-2. Enter project title
-3. Select programming language
-4. Start coding!
-
-### 3. Writing & Executing Code
-
-1. Type code in the editor
-2. Select language (top right)
-3. Click "Run" button
-4. View output in the output panel
-
-### 4. Saving Project
-
-- Click "Save" to save changes
-- Changes auto-save every 30 seconds
-
-### 5. Sharing Projects
-
-1. Click "Share" button
-2. Select sharing permissions
-3. Copy share link
-4. Send to collaborators
-
----
-
-## 🔐 Authentication Flow
-
-1. User enters credentials
-2. Firebase authenticates
-3. Token stored in local storage
-4. Token sent with each API request
-5. Backend verifies token
-6. On logout, token cleared
-
----
-
-## 📱 Browser Support
-
-- Chrome (latest)
-- Firefox (latest)
-- Safari (latest)
-- Edge (latest)
-
----
-
-## ⚡ Performance Optimization
-
-- Code splitting with dynamic imports
-- Lazy loading routes
-- Image optimization
-- Minification and compression
-- Caching strategies
-
----
-
-## 🐛 Troubleshooting
-
-### Port Already in Use
-
-```bash
-lsof -i :5173
-kill -9 <PID>
-```
-
-### CORS Errors
-
-- Verify backend URL in `.env.local`
-- Check backend CORS configuration
-- Verify Firebase project settings
-
-### Firebase Not Initializing
-
-- Verify all Firebase config values
-- Check Firebase project enabled
-- Ensure Firestore database created
-
----
-
-## 📚 Resources
-
-- [React Documentation](https://react.dev)
-- [Vite Documentation](https://vitejs.dev)
-- [Tailwind CSS](https://tailwindcss.com)
-- [Firebase Web Docs](https://firebase.google.com/docs/web)
-
----
-
-## 📄 License
-
-MIT License
-
----
-
-## 👥 Contact
-
-- 📧 **Email**: anujzdv@gmail.com
-- 💼 **LinkedIn**: [Anuj Kumar](https://linkedin.com/in/anujzdv)
-- 🐙 **GitHub**: [@Anujzdv](https://github.com/Anujzdv)
-
----
-
-<div align="center">
-
-**Made with ❤️ by Anuj Kumar**
-
-</div>
+Deploy to **Netlify** or **Vercel**:
+1. Build command: `npm run build`
+2. Publish directory: `dist`
+3. Environment variables:
+   - `VITE_API_URL`: Your deployed backend URL (e.g. `https://syntaxflow-backend.onrender.com` or custom domain)
+4. Ensure SPA redirects are configured (`_redirects` file in `public/` containing `/* /index.html 200`).

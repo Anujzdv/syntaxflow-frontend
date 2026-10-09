@@ -42,7 +42,7 @@ const Leaderboard = () => {
          try {
             const oldRes = await api.get('/auth/leaderboard');
             setTopUsers(Array.isArray(oldRes.data) ? oldRes.data : []);
-         } catch(e) {
+         } catch {
             setError('Failed to fetch leaderboard data.');
          }
       } else {
@@ -58,7 +58,14 @@ const Leaderboard = () => {
     if (currentUserData) return currentUserData;
     if (!user) return null;
     
-    const index = topUsers.findIndex(u => u._id === user._id || u.username === user.username);
+    const userId = String(user._id || user.id || '');
+    const userName = (user.username || user.name || '').toLowerCase();
+
+    const index = topUsers.findIndex(u => 
+      (userId && String(u._id) === userId) || 
+      (userName && (u.username?.toLowerCase() === userName || u.name?.toLowerCase() === userName))
+    );
+
     if (index !== -1) {
       const active = topUsers[index];
       const nextUser = index > 0 ? topUsers[index - 1] : null;
@@ -70,7 +77,7 @@ const Leaderboard = () => {
         nextRankXp: nextUser ? nextUser.xp : active.xp
       };
     }
-    return { rank: 'Unranked', xp: 0, gapToNext: null };
+    return { rank: 'Unranked', xp: user.xp || 0, gapToNext: null };
   };
 
   const activeStats = getActiveUserStats();
@@ -151,7 +158,7 @@ const Leaderboard = () => {
           <>
             {/* Podium UI (Top 3) */}
             <div className="flex items-end justify-center gap-2 sm:gap-6 lg:gap-10 mb-12 h-72">
-              {orderedPodium.map((p, i) => (
+              {orderedPodium.map((p) => (
                 <motion.div 
                   key={p.user._id}
                   initial={{ opacity: 0, y: 50 }}
@@ -166,9 +173,9 @@ const Leaderboard = () => {
                         <Crown className="w-8 h-8 text-yellow-400 mb-1 drop-shadow-[0_0_10px_rgba(250,204,21,0.8)]" />
                       </motion.div>
                     )}
-                    <UserAvatar char={p.user.username?.charAt(0)} rank={p.rank} />
+                    <UserAvatar char={(p.user.username || p.user.name)?.charAt(0)} rank={p.rank} />
                     <span className={`mt-2 font-bold text-sm truncate w-full text-center ${p.rank === 1 ? 'text-yellow-400' : p.rank === 2 ? 'text-slate-300' : 'text-amber-600'}`}>
-                      @{p.user.username}
+                      @{p.user.username || p.user.name}
                     </span>
                   </div>
 
@@ -205,7 +212,7 @@ const Leaderboard = () => {
                 <div className="divide-y divide-slate-800/50">
                   {listUsers.map((u, index) => {
                     const actualRank = index + 4;
-                    const isMe = user && u._id === user._id;
+                    const isMe = user && (String(u._id) === String(user._id || user.id));
 
                     return (
                       <motion.div 
@@ -221,10 +228,10 @@ const Leaderboard = () => {
                         </div>
                         
                         <div className="col-span-6 sm:col-span-7 flex items-center gap-3">
-                          <UserAvatar char={u.username?.charAt(0)} rank={actualRank} />
+                          <UserAvatar char={(u.username || u.name)?.charAt(0)} rank={actualRank} />
                           <div className="flex flex-col">
                             <span className={`font-bold text-base truncate max-w-[100px] sm:max-w-xs ${isMe ? 'text-indigo-400' : 'text-slate-200'}`}>
-                              @{u.username}
+                              @{u.username || u.name}
                             </span>
                             {u.streak > 2 && (
                               <span className="text-[10px] text-orange-400 flex items-center gap-1 font-mono">

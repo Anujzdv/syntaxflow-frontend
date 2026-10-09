@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Code2, Heart, Share2, Terminal, Cpu, Zap, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-const TypewriterText = ({ text, delay = 0 }) => {
+const TypewriterText = ({ text }) => {
   const [displayedText, setDisplayedText] = useState('');
   
   useEffect(() => {
